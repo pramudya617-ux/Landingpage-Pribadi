@@ -24,6 +24,20 @@
 
 html {
   scroll-behavior: smooth;
+  /* Card stack / gallery reorder DOM nodes on a timer; without this Chrome's
+     scroll anchoring keeps nudging the scroll position on its own. */
+  overflow-anchor: none;
+}
+
+@keyframes hero-caption {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 body {
