@@ -17,7 +17,7 @@ import FlowFieldBackground from "@/components/ui/flow-field-background";
 import HorizontalScrollGallery, {
   type GalleryItem,
 } from "@/components/ui/horizontal-scroll-gallery";
-import CardStack, { type CardStackItem } from "@/components/ui/card-stack";
+import CardStack from "@/components/ui/card-stack";
 import AnimatedGradientFrame from "@/components/ui/animated-gradient-frame";
 import SpotlightCard from "@/components/ui/spotlight-card";
 import GradientMenu from "@/components/ui/gradient-menu";
@@ -70,7 +70,7 @@ const galleryItems: GalleryItem[] = [
   },
 ];
 
-const portfolioStack: CardStackItem[] = [
+const portfolioStack = [
   {
     title: "Staf Media & Informasi — Himpunan Mahasiswa",
     category: "Organisasi",
@@ -102,6 +102,14 @@ const portfolioStack: CardStackItem[] = [
       "Merancang identitas visual kegiatan: poster, feed template, banner, dan merchandise. Menjaga konsistensi brand di seluruh kanal media sosial organisasi.",
     image:
       "https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=900&auto=format&fit=crop",
+  },
+  {
+    title: "Fotografi & Penyuntingan",
+    category: "Fotografi",
+    description:
+      "Liputan potret, produk, dan human interest untuk kebutuhan publikasi. Menangani penyuntingan warna dan retouch agar hasil akhir konsisten dengan identitas visual.",
+    image:
+      "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?q=80&w=900&auto=format&fit=crop",
   },
 ];
 
@@ -226,8 +234,8 @@ export default function App() {
 
         {/* ── PORTFOLIO: card stack ──────────────────────────── */}
         <section id="portfolio" className="relative px-5 py-24 md:py-32">
-          <div className="mx-auto grid max-w-6xl items-center gap-14 md:grid-cols-2">
-            <div className="flex flex-col gap-4">
+          <div className="mx-auto flex max-w-6xl flex-col gap-14">
+            <div className="flex flex-col items-center gap-4 text-center">
               <span className="font-display text-xs font-semibold uppercase tracking-[0.3em] text-[#4899EA]">
                 01 — Portofolio
               </span>
@@ -235,20 +243,31 @@ export default function App() {
                 Sorotan <GradientText>Karya</GradientText>
               </h2>
               <p className="max-w-md leading-relaxed text-white/50">
-                Tumpukan kartu ini berganti sendiri — atau klik kartunya untuk
-                melihat karya berikutnya. Setiap kartu adalah satu bidang yang
-                pernah saya kerjakan.
+                Kipas kartu ini berganti sendiri — klik, geser, atau pakai
+                tombol panah untuk menjelajah. Setiap kartu adalah satu bidang
+                yang pernah saya kerjakan.
               </p>
               <div className="mt-2 h-px w-24 bg-[linear-gradient(90deg,#67F3CE,#4899EA)]" />
             </div>
-            <CardStack items={portfolioStack} />
+            <CardStack
+              items={portfolioStack.map((exp, i) => ({
+                id: i,
+                title: exp.title,
+                description: exp.description,
+                imageSrc: exp.image,
+                tag: exp.category,
+              }))}
+              maxVisible={5}
+              autoAdvance
+              intervalMs={3500}
+            />
           </div>
         </section>
 
         {/* ── EXPERIENCE: spotlight cards ────────────────────── */}
         <section id="experience" className="relative px-5 py-24 md:py-32">
           <div className="mx-auto max-w-6xl">
-            <div className="mb-12 flex flex-col gap-3 md:mb-16">
+            <ScrollReveal direction="left" className="mb-12 flex flex-col gap-3 md:mb-16">
               <span className="font-display text-xs font-semibold uppercase tracking-[0.3em] text-[#4899EA]">
                 02 — Pengalaman
               </span>
@@ -262,7 +281,7 @@ export default function App() {
                   Geser ke samping untuk melihat →
                 </span>
               </p>
-            </div>
+            </ScrollReveal>
 
             {/* Mobile: horizontal snap-scroll. Desktop: alternating rows. */}
             <div
@@ -280,6 +299,7 @@ export default function App() {
                     ${index % 2 === 1 ? "md:self-end" : "md:self-start"}
                   `}
                 >
+                  <ScrollReveal className="h-full">
                   <SpotlightCard className="h-full">
                     <article
                       className={`flex h-full flex-col ${
@@ -313,6 +333,7 @@ export default function App() {
                       </div>
                     </article>
                   </SpotlightCard>
+                  </ScrollReveal>
                 </div>
               ))}
             </div>
