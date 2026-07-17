@@ -96,17 +96,23 @@ export default function HorizontalScrollGallery({
       style={{ height: `${Math.max(300, n * 62)}vh` }}
     >
       <div className="sticky top-0 flex h-dvh flex-col items-center justify-center overflow-hidden">
-        {/* Corner bracket ornament, like a viewfinder */}
-        <span
+        {/* Hero-only backdrop: white grain texture fading to the site's
+            black by the very bottom, so the sticky viewport blends back
+            into the dark theme once this section finishes scrolling. */}
+        <div
           aria-hidden="true"
-          className="absolute right-[12%] top-[18%] font-mono text-sm tracking-[0.5em] text-white/25"
-        >
-          [ ]
-        </span>
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundColor: "#f7f6f2",
+            backgroundImage:
+              "linear-gradient(to bottom, transparent 0%, transparent 78%, #050505 94%), radial-gradient(circle at 1px 1px, rgba(0,0,0,0.06) 1px, transparent 0)",
+            backgroundSize: "auto, 4px 4px",
+          }}
+        />
 
         {/* Cylinder stage */}
         <div
-          className="flex h-[46vh] min-h-[280px] w-full items-center justify-center"
+          className="relative z-10 flex h-[46vh] min-h-[280px] w-full items-center justify-center"
           style={{ perspective: "1200px" }}
         >
           <motion.div
@@ -134,8 +140,8 @@ export default function HorizontalScrollGallery({
                     aspectRatio: "3 / 4",
                     transform: `rotateY(${i * stepDeg}deg) translateZ(${radius}px)`,
                     borderColor: isActive
-                      ? "rgba(103,243,206,0.5)"
-                      : "rgba(255,255,255,0.1)",
+                      ? "rgba(103,243,206,0.6)"
+                      : "rgba(13,13,13,0.15)",
                     boxShadow: isActive
                       ? "0 0 50px -12px rgba(72,153,234,0.6)"
                       : "none",
@@ -164,25 +170,25 @@ export default function HorizontalScrollGallery({
         {/* Active item caption — remounts on change to replay the fade */}
         <div
           key={activeIndex}
-          className="pointer-events-none mt-6 flex flex-col items-center gap-2 px-6 text-center"
+          className="pointer-events-none relative z-10 mt-6 flex flex-col items-center gap-2 px-6 text-center"
           style={{ animation: "hero-caption 0.5s ease-out both" }}
         >
-          <p className="font-mono text-xs tracking-[0.35em] text-[#67F3CE]/80">
+          <p className="font-mono text-xs tracking-[0.35em] text-[#1B4F8C]/80">
             {String(activeIndex + 1).padStart(2, "0")} /{" "}
             {String(n).padStart(2, "0")}
           </p>
-          <p className="font-display text-lg font-semibold text-white sm:text-xl">
+          <p className="font-display text-lg font-semibold text-[#0D0D0D] sm:text-xl">
             {active.title}
           </p>
-          <p className="max-w-md text-sm leading-relaxed text-white/50">
+          <p className="max-w-md text-sm leading-relaxed text-[#0D0D0D]/60">
             {active.caption}
           </p>
         </div>
 
-        {children}
+        <div className="relative z-10">{children}</div>
 
         {footer && (
-          <div className="absolute inset-x-0 bottom-0">{footer}</div>
+          <div className="absolute inset-x-0 bottom-0 z-10">{footer}</div>
         )}
       </div>
 

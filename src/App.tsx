@@ -178,8 +178,8 @@ export default function App() {
               href="mailto:pramudya617@student.ub.ac.id"
               className="
                 group mt-10 inline-flex min-h-11 items-center gap-1 px-4 py-2
-                font-display text-sm font-semibold text-white
-                transition-colors duration-300 hover:text-[#67F3CE]
+                font-display text-sm font-semibold text-[#0D0D0D]
+                transition-colors duration-300 hover:text-[#1B4F8C]
               "
             >
               <GradientText>[</GradientText>
