@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export interface GalleryItem {
@@ -10,6 +11,7 @@ export interface GalleryItem {
 }
 
 interface HorizontalScrollGalleryProps {
+  /** Rendered as faces on a 3D cylinder — pass at most 5 for a balanced spin. */
   items: GalleryItem[];
   className?: string;
   /** Rendered in the sticky viewport below the caption (e.g. a CTA link). */
@@ -18,11 +20,15 @@ interface HorizontalScrollGalleryProps {
   footer?: React.ReactNode;
 }
 
+const imgTransition = { duration: 0.15, ease: [0.32, 0.72, 0, 1] as const };
+
 /**
  * Scroll-hijacked hero: the section provides a tall vertical scroll runway
- * while its sticky viewport translates the gallery horizontally with smooth
- * inertia (lerp). The card nearest the center scales up into focus; the
- * others stay small, dimmed and desaturated.
+ * while its sticky viewport spins a 3D cylinder of image cards driven by
+ * scroll progress (no drag — dragging on the x-axis is what breaks native
+ * vertical scrolling on mobile). The card facing the viewer is the active
+ * one; once the last card comes to front, the runway ends and normal page
+ * scroll continues into the next section.
  */
 export default function HorizontalScrollGallery({
   items,
@@ -31,18 +37,31 @@ export default function HorizontalScrollGallery({
   footer,
 }: HorizontalScrollGalleryProps) {
   const sectionRef = useRef<HTMLElement>(null);
-  const [progress, setProgress] = useState(0);
-  const [viewport, setViewport] = useState({ w: 1280, h: 800 });
+  const rotation = useMotionValue(0);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [zoomed, setZoomed] = useState<number | null>(null);
+  const [isSmall, setIsSmall] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 640px)");
+    const update = () => setIsSmall(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  const n = items.length;
+  const stepDeg = 360 / n;
+  const faceWidth = isSmall ? 118 : 210;
+  // Desktop gets extra spread between faces so cards read as separated,
+  // like a wide carousel, instead of overlapping; mobile keeps the tight fit.
+  const cylinderWidth = isSmall ? faceWidth * n : faceWidth * n * 1.6;
+  const radius = cylinderWidth / (2 * Math.PI);
 
   useEffect(() => {
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
-
-    const onResize = () =>
-      setViewport({ w: window.innerWidth, h: window.innerHeight });
-    onResize();
-    window.addEventListener("resize", onResize);
 
     let raf = 0;
     let current = 0;
@@ -56,25 +75,18 @@ export default function HorizontalScrollGallery({
         const next = reducedMotion
           ? target
           : current + (target - current) * 0.075;
-        if (Math.abs(next - current) > 0.00015 || current === 0) {
+        if (Math.abs(next - current) > 0.0002 || current === 0) {
           current = next;
-          setProgress(next);
+          rotation.set(-next * stepDeg * (n - 1));
+          setActiveIndex(Math.round(next * (n - 1)));
         }
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [n, stepDeg, rotation]);
 
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", onResize);
-    };
-  }, []);
-
-  const n = items.length;
-  const spacing = Math.max(220, Math.min(viewport.w * 0.26, 440));
-  const baseWidth = Math.max(84, Math.min(viewport.w * 0.09, 120));
-  const activeIndex = Math.min(n - 1, Math.max(0, Math.round(progress * (n - 1))));
   const active = items[activeIndex];
 
   return (
@@ -92,59 +104,67 @@ export default function HorizontalScrollGallery({
           [ ]
         </span>
 
-        {/* Gallery stage */}
-        <div className="relative h-[46vh] min-h-[300px] w-full">
-          {items.map((item, i) => {
-            const x = (i - progress * (n - 1)) * spacing;
-            const d = Math.abs(x) / spacing; // distance in card units
-            const focus = Math.max(0, 1 - Math.min(d, 1));
-            const scale = 1 + focus * 1.25;
-            // Slight parallax: outer cards drift a touch faster
-            const px = x * (1 + 0.09 * Math.min(d, 3));
-            const py = Math.min(d, 3) * 7;
-            const isActive = focus > 0.55;
-            return (
-              <div
-                key={item.title}
-                className="absolute left-1/2 top-1/2 will-change-transform"
-                style={{
-                  transform: `translate(-50%, -50%) translate3d(${px}px, ${py}px, 0) scale(${scale})`,
-                  zIndex: 50 - Math.round(d * 10),
-                }}
-              >
-                <div
+        {/* Cylinder stage */}
+        <div
+          className="flex h-[46vh] min-h-[280px] w-full items-center justify-center"
+          style={{ perspective: "1200px" }}
+        >
+          <motion.div
+            className="relative flex h-full items-center justify-center"
+            style={{
+              width: cylinderWidth,
+              rotateY: rotation,
+              transformStyle: "preserve-3d",
+            }}
+          >
+            {items.map((item, i) => {
+              const isActive = i === activeIndex;
+              return (
+                <button
+                  type="button"
+                  key={item.title}
+                  onClick={() => setZoomed(i)}
+                  aria-label={`Perbesar ${item.title}`}
                   className={cn(
-                    "relative overflow-hidden rounded-lg border",
-                    "transition-[filter,border-color,box-shadow] duration-500",
-                    isActive
-                      ? "border-[#67F3CE]/50 shadow-[0_0_50px_-12px_rgba(72,153,234,0.6)]"
-                      : "border-white/10"
+                    "absolute flex items-center justify-center overflow-hidden rounded-xl border",
+                    "cursor-pointer transition-[filter,border-color] duration-500"
                   )}
                   style={{
-                    width: baseWidth,
-                    height: Math.round(baseWidth * 1.25),
+                    width: faceWidth,
+                    aspectRatio: "3 / 4",
+                    transform: `rotateY(${i * stepDeg}deg) translateZ(${radius}px)`,
+                    borderColor: isActive
+                      ? "rgba(103,243,206,0.5)"
+                      : "rgba(255,255,255,0.1)",
+                    boxShadow: isActive
+                      ? "0 0 50px -12px rgba(72,153,234,0.6)"
+                      : "none",
                     filter: isActive
                       ? "grayscale(0) brightness(1)"
-                      : "grayscale(1) brightness(0.5)",
+                      : "grayscale(0.7) brightness(0.55)",
                   }}
                 >
-                  <img
+                  <motion.img
+                    layoutId={`hero-img-${i}`}
                     src={item.image}
                     alt={item.title}
                     draggable={false}
-                    loading={i < 3 ? "eager" : "lazy"}
-                    className="h-full w-full select-none object-cover"
+                    loading={i === 0 ? "eager" : "lazy"}
+                    className="pointer-events-none h-full w-full select-none object-cover"
+                    initial={{ filter: "blur(4px)" }}
+                    animate={{ filter: "blur(0px)" }}
+                    transition={imgTransition}
                   />
-                </div>
-              </div>
-            );
-          })}
+                </button>
+              );
+            })}
+          </motion.div>
         </div>
 
         {/* Active item caption — remounts on change to replay the fade */}
         <div
           key={activeIndex}
-          className="pointer-events-none mt-2 flex flex-col items-center gap-2 px-6 text-center"
+          className="pointer-events-none mt-6 flex flex-col items-center gap-2 px-6 text-center"
           style={{ animation: "hero-caption 0.5s ease-out both" }}
         >
           <p className="font-mono text-xs tracking-[0.35em] text-[#67F3CE]/80">
@@ -165,6 +185,26 @@ export default function HorizontalScrollGallery({
           <div className="absolute inset-x-0 bottom-0">{footer}</div>
         )}
       </div>
+
+      {/* Tap-to-zoom overlay */}
+      <AnimatePresence>
+        {zoomed !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setZoomed(null)}
+            className="fixed inset-0 z-[60] flex cursor-zoom-out items-center justify-center bg-black/80 p-6 backdrop-blur-sm"
+          >
+            <motion.img
+              layoutId={`hero-img-${zoomed}`}
+              src={items[zoomed].image}
+              alt={items[zoomed].title}
+              className="max-h-[80vh] max-w-full rounded-2xl border border-[#67F3CE]/30 object-contain shadow-2xl"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

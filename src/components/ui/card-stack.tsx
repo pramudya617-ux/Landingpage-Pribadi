@@ -213,10 +213,18 @@ export function CardStack<T extends CardStackItem>({
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      {/* Stage */}
+      {/* Stage — clip horizontally only, so fanned-out cards can't create a
+          horizontal scrollbar on narrow (mobile) viewports. Plain CSS
+          `overflow` can't do single-axis clipping: setting overflow-x
+          hidden forces overflow-y to compute as auto too (per spec), which
+          re-clipped the tilted (rotateX) side cards vertically. clip-path
+          has no such coupling, so it clips left/right only. */}
       <div
         className="relative w-full"
-        style={{ height: Math.max(380, fitH + 80) }}
+        style={{
+          height: Math.max(380, fitH + 80),
+          clipPath: "inset(-1000px 0 -1000px 0)",
+        }}
         tabIndex={0}
         onKeyDown={onKeyDown}
       >
@@ -297,6 +305,11 @@ export function CardStack<T extends CardStackItem>({
                     height: fitH,
                     zIndex,
                     transformStyle: "preserve-3d",
+                    // Let the browser handle vertical page scroll natively
+                    // even when a touch starts on the draggable front card —
+                    // without this, dragging on the x-axis blocks scrolling
+                    // the page on mobile.
+                    touchAction: isActive ? "pan-y" : undefined,
                   }}
                   initial={
                     reduceMotion
@@ -356,7 +369,7 @@ export function CardStack<T extends CardStackItem>({
                 <button
                   key={it.id}
                   onClick={() => setActive(idx)}
-                  className="flex h-8 w-8 items-center justify-center"
+                  className="flex h-11 w-11 items-center justify-center"
                   aria-label={`Go to ${it.title}`}
                 >
                   <span

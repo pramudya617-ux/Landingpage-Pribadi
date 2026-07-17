@@ -14,61 +14,12 @@ import {
   FaGithub,
 } from "react-icons/fa6";
 import FlowFieldBackground from "@/components/ui/flow-field-background";
-import HorizontalScrollGallery, {
-  type GalleryItem,
-} from "@/components/ui/horizontal-scroll-gallery";
+import HorizontalScrollGallery from "@/components/ui/horizontal-scroll-gallery";
 import CardStack from "@/components/ui/card-stack";
 import AnimatedGradientFrame from "@/components/ui/animated-gradient-frame";
 import SpotlightCard from "@/components/ui/spotlight-card";
 import GradientMenu from "@/components/ui/gradient-menu";
 import ScrollReveal from "@/components/ui/scroll-reveal";
-
-const galleryItems: GalleryItem[] = [
-  {
-    title: "Staf Media & Informasi",
-    caption:
-      "Merancang narasi visual himpunan — dari kalender konten hingga engagement dua kali lipat.",
-    image:
-      "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    title: "Content Creator",
-    caption: "Dari riset ide dan naskah, hingga cerita yang sampai ke layar.",
-    image:
-      "https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    title: "Fotografi",
-    caption: "Cahaya, komposisi, dan cerita dalam satu bingkai.",
-    image:
-      "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    title: "Dokumentasi Event",
-    caption:
-      "Mengabadikan momen yang tak terulang — seminar, orientasi, dan festival tahunan.",
-    image:
-      "https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    title: "Videografi",
-    caption: "Bergerak dalam 24 frame — dari liputan hingga aftermovie.",
-    image:
-      "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    title: "Desain & Branding",
-    caption: "Konsistensi brand di setiap piksel, poster, dan feed.",
-    image:
-      "https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    title: "Kolaborasi",
-    caption: "Jika mereka memberimu salib — pikul, dan bawa diam-diam ke puncak.",
-    image:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=600&auto=format&fit=crop",
-  },
-];
 
 const portfolioStack = [
   {
@@ -112,6 +63,12 @@ const portfolioStack = [
       "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?q=80&w=900&auto=format&fit=crop",
   },
 ];
+
+const heroItems = portfolioStack.map((exp) => ({
+  image: exp.image,
+  title: exp.category,
+  caption: exp.title,
+}));
 
 const mediaHandles = [
   { icon: <FaInstagram />, label: "Instagram", href: "https://instagram.com" },
@@ -193,7 +150,7 @@ export default function App() {
         {/* ── HERO: scroll-driven horizontal gallery ─────────── */}
         <div id="home">
           <HorizontalScrollGallery
-            items={galleryItems}
+            items={heroItems}
             footer={
               <div className="flex items-center justify-between px-6 pb-5 text-xs font-medium uppercase tracking-[0.25em] text-white/40 sm:px-10">
                 <a
@@ -233,22 +190,25 @@ export default function App() {
         </div>
 
         {/* ── PORTFOLIO: card stack ──────────────────────────── */}
-        <section id="portfolio" className="relative px-5 py-24 md:py-32">
-          <div className="mx-auto flex max-w-6xl flex-col gap-14">
-            <div className="flex flex-col items-center gap-4 text-center">
-              <span className="font-display text-xs font-semibold uppercase tracking-[0.3em] text-[#4899EA]">
-                01 — Portofolio
-              </span>
-              <h2 className="font-display text-3xl font-bold tracking-tight sm:text-5xl">
-                Sorotan <GradientText>Karya</GradientText>
-              </h2>
-              <p className="max-w-md leading-relaxed text-white/50">
-                Kipas kartu ini berganti sendiri — klik, geser, atau pakai
-                tombol panah untuk menjelajah. Setiap kartu adalah satu bidang
-                yang pernah saya kerjakan.
-              </p>
-              <div className="mt-2 h-px w-24 bg-[linear-gradient(90deg,#67F3CE,#4899EA)]" />
-            </div>
+        <section id="portfolio" className="relative py-20 md:py-24">
+          <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-5 text-center">
+            <span className="font-display text-xs font-semibold uppercase tracking-[0.3em] text-[#4899EA]">
+              01 — Portofolio
+            </span>
+            <h2 className="font-display text-3xl font-bold tracking-tight sm:text-5xl">
+              Sorotan <GradientText>Karya</GradientText>
+            </h2>
+            <p className="max-w-md leading-relaxed text-white/50">
+              Kipas kartu ini berganti sendiri — klik, geser, atau pakai
+              tombol panah untuk menjelajah. Setiap kartu adalah satu bidang
+              yang pernah saya kerjakan.
+            </p>
+            <div className="mt-2 h-px w-24 bg-[linear-gradient(90deg,#67F3CE,#4899EA)]" />
+          </div>
+          {/* Full-bleed stage (not confined to the max-w-6xl column) so the
+              fan's overflow-hidden clips at the true screen edge, like the
+              hero, instead of cutting mid-card inside a visibly boxed column. */}
+          <div className="mt-6">
             <CardStack
               items={portfolioStack.map((exp, i) => ({
                 id: i,
@@ -258,6 +218,7 @@ export default function App() {
                 tag: exp.category,
               }))}
               maxVisible={5}
+              cardHeight={280}
               autoAdvance
               intervalMs={3500}
             />
